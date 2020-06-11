@@ -8,6 +8,8 @@
  */
 #include <Arduino.h>
 #include "BasicStepperDriver.h"
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
 
 // All the wires needed for full functionality
 #define DIR 55
@@ -29,6 +31,7 @@ int b = minRPM;
 
 // 2-wire basic config, microstepping is hardwired on the driver
 BasicStepperDriver stepper(MOTOR_STEPS, DIR, STEP);
+LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 
 //Uncomment line to use enable/disable functionality
 //BasicStepperDriver stepper(MOTOR_STEPS, DIR, STEP, SLEEP);
@@ -36,11 +39,25 @@ int val, RPM=300;
 float perc;
 
 void setup() {
+    lcd.init();                      // initialize the lcd 
+    lcd.init();
+    lcd.backlight();
+
     stepper.begin(RPM, MICROSTEPS);
     // if using enable/disable on ENABLE pin (active LOW) instead of SLEEP uncomment next line
     // stepper.setEnableActiveState(LOW);
     pinMode(pot, INPUT);
     Serial.begin(9600);
+
+    lcd.setCursor(3,0);
+    lcd.print("Creado por:");
+    lcd.setCursor(2,1);
+    lcd.print("Miguel Califa");
+    delay(1000);
+    lcd.setCursor(2,1);
+    lcd.print("CNC Ciensa");
+    delay(1000);
+    lcd.clear();
 }
 
 void loop() {
@@ -56,6 +73,12 @@ void loop() {
     perc = (val* 100.0)/1024.0;
     //RPM = (perc * maxRPM) / 100.0;
     RPM = perc*m + b;
+    
+    lcd.setCursor(0,0);
+    lcd.print("Pot:"); lcd.print(perc); lcd.print(" %");
+    lcd.setCursor(0,1);
+    lcd.print("RPM:"); lcd.print(RPM)
+    
     Serial.print("Potenciometro: "); Serial.print(perc); Serial.println(" %");
     Serial.print("RPM: "); Serial.println(RPM);
     stepper.setRPM(RPM);

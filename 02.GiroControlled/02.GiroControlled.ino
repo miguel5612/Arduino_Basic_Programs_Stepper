@@ -8,6 +8,10 @@
  */
 #include <Arduino.h>
 #include "BasicStepperDriver.h"
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+#include <EEPROM.h>
+
 
 // All the wires needed for full functionality
 #define DIR 55
@@ -31,6 +35,7 @@ char serialData;
 
 // 2-wire basic config, microstepping is hardwired on the driver
 BasicStepperDriver stepper(MOTOR_STEPS, DIR, STEP);
+LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 
 //Uncomment line to use enable/disable functionality
 //BasicStepperDriver stepper(MOTOR_STEPS, DIR, STEP, SLEEP);
@@ -39,6 +44,10 @@ float perc;
 int steps = 0, delayTime = 0;
 
 void setup() {
+    lcd.init();                      // initialize the lcd 
+    lcd.init();
+    lcd.backlight();
+    
     stepper.begin(RPM, MICROSTEPS);
     // if using enable/disable on ENABLE pin (active LOW) instead of SLEEP uncomment next line
     // stepper.setEnableActiveState(LOW);
@@ -46,8 +55,21 @@ void setup() {
     pinMode(relay, OUTPUT);
     digitalWrite(relay, LOW);
     Serial.begin(9600);
+
+    lcd.setCursor(3,0);
+    lcd.print("Creado por:");
+    lcd.setCursor(2,1);
+    lcd.print("Miguel Califa");
+    delay(1000);
+    lcd.setCursor(2,1);
+    lcd.print("CNC Ciensa");
+    delay(1000);
+    lcd.clear();
+    
     Serial.println("Escriba P para pasos, T para tiempo, R para reiniciar");
     Serial.println(" ejemplo P150 para configurar 150 pasos y T1000 para configurar 1 segundo de tiempo");
+    steps = EEPROM.read(0);
+    delayTime = EEPROM.read(1);
 }
 
 void loop() {
@@ -55,10 +77,12 @@ void loop() {
         serialData = Serial.read();
         if ( serialData == 'P'){
           steps = Serial.readString().toInt();
+          EEPROM.write(0, steps);
           Serial.println("pasos: "+ String(steps) );
         }
         else if ( serialData == 'T'){
           delayTime = Serial.readString().toInt();
+          EEPROM.write(1, delayTime);
           Serial.println("Tiempo (mS): "+ String(delayTime) );
         }
         else if (serialData == 'R'){
@@ -67,6 +91,12 @@ void loop() {
           delayTime = 0; steps = 0;
         }
     }
+
+    lcd.setCursor(0,0);
+    lcd.print("Pasos:"); lcd.print(steps); lcd.print(" %");
+    lcd.setCursor(0,1);
+    lcd.print("Tiempo:"); lcd.print(delayTime);
+    
     if(delayTime > 0 & steps>0)
     {
        Serial.print("Girando.");
@@ -81,8 +111,9 @@ void loop() {
        Serial.println(); // Salto de linea
        delay(delayTime); // Paso 2, el motor espera
        digitalWrite(relay, HIGH); // Paso 3, genera una salida
-       delayTime = 0; steps = 0;
        Serial.println("Tarea completada con exito!");
+       delay(500); // Paso 3, espera mientras sube el piston
+       digitalWrite(relay, LOW); // Paso 4, apaga la señal de rele y todo vuelve a empezar
     }
     getVelocity();
 }

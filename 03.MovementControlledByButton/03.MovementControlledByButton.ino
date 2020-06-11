@@ -8,6 +8,7 @@
  */
 #include <Arduino.h>
 #include "BasicStepperDriver.h"
+#include <EEPROM.h>
 
 // All the wires needed for full functionality
 #define DIR 55
@@ -47,6 +48,7 @@ void setup() {
     pinMode(button, INPUT);
     Serial.begin(9600);
     Serial.println("Escriba P para pasos, ejemplo P123 para configurar 123 pasos");
+    steps = EEPROM.read(0);
 }
 
 void loop() {
@@ -54,6 +56,7 @@ void loop() {
         serialData = Serial.read();
         if ( serialData == 'P'){
           steps = Serial.readString().toInt();
+          EEPROM.write(0, steps);
           Serial.println("pasos: "+ String(steps) );
         }
     }
