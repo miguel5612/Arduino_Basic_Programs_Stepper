@@ -59,10 +59,10 @@ void setup() {
     lcd.setCursor(3,0);
     lcd.print("Creado por:");
     lcd.setCursor(2,1);
-    lcd.print("Miguel Califa");
+    lcd.print(" Miguel Califa ");
     delay(1000);
     lcd.setCursor(2,1);
-    lcd.print("CNC Ciensa");
+    lcd.print("   CNC Ciensa   ");
     delay(1000);
     lcd.clear();
     
@@ -93,7 +93,7 @@ void loop() {
     }
 
     lcd.setCursor(0,0);
-    lcd.print("Pasos:"); lcd.print(steps); lcd.print(" %");
+    lcd.print("P:"); lcd.print(steps); lcd.print(" Pot:"); lcd.print(perc); lcd.print("%");
     lcd.setCursor(0,1);
     lcd.print("Tiempo:"); lcd.print(delayTime);
     
