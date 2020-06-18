@@ -44,8 +44,8 @@ float perc;
 int steps = 0, delayTime = 0;
 
 void setup() {
-    lcd.init();                      // initialize the lcd 
-    lcd.init();
+    lcd.begin();                      // initialize the lcd 
+    lcd.begin();
     lcd.backlight();
     
     stepper.begin(RPM, MICROSTEPS);
