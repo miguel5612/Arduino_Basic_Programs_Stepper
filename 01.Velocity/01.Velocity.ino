@@ -12,19 +12,21 @@
 #include <LiquidCrystal_I2C.h>
 
 // All the wires needed for full functionality
-#define DIR 55
-#define STEP 54
-#define pot A3
+#define DIR 6 // Y - Arduino uno cnc Shield
+#define STEP 3
+#define EN 8
+#define pot A0
 
 // Motor steps per revolution. Most steppers are 200 steps or 1.8 degrees/step
-#define MOTOR_STEPS 200
+#define MOTOR_STEPS 1600
 
 // Since microstepping is set externally, make sure this matches the selected mode
 // If it doesn't, the motor will move at a different RPM than chosen
 // 1=full step, 2=half step etc.
-#define MICROSTEPS 2
+#define MICROSTEPS 1
 #define minRPM 10
-#define maxRPM 250
+#define maxRPM 114
+
 
 float m = (maxRPM - minRPM)/(100.0-0.0);
 int b = minRPM;
@@ -37,17 +39,25 @@ LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars
 //BasicStepperDriver stepper(MOTOR_STEPS, DIR, STEP, SLEEP);
 int val, RPM=300;
 float perc;
+const byte interruptPin = 2;
+
 
 void setup() {
+    Serial.begin(9600);
+    pinMode(interruptPin, INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(interruptPin), getVelocity, CHANGE);
+    
     lcd.begin();                      // initialize the lcd 
     lcd.begin();
     lcd.backlight();
 
-    stepper.begin(RPM, MICROSTEPS);
+    //stepper.begin(RPM, MICROSTEPS);
     // if using enable/disable on ENABLE pin (active LOW) instead of SLEEP uncomment next line
     // stepper.setEnableActiveState(LOW);
     pinMode(pot, INPUT);
-    Serial.begin(9600);
+    pinMode(EN, OUTPUT);
+    
+    digitalWrite(EN, LOW);
 
     lcd.setCursor(3,0);
     lcd.print("Creado por:");
@@ -61,35 +71,26 @@ void setup() {
 }
 
 void loop() {
+    lcd.setCursor(0,0);
+    lcd.print("Pot:"); lcd.print(perc); lcd.print(" %"); lcd.print("     ");
+    lcd.setCursor(0,1);
+    lcd.print("RPM:"); lcd.print(RPM); lcd.print("     ");
     
+    getVelocity();
+    stepper.move(1e5000);
+}
+
+void getVelocity()
+{
+    Serial.print("Potenciometro: "); Serial.print(perc); Serial.println(" %");
+    Serial.print("RPM: "); Serial.println(RPM);
   
-    // energize coils - the motor will hold position
-    // stepper.enable();
-  
-    /*
-     * Moving motor one full revolution using the degree notation
-     */
     val = analogRead(pot);
     perc = (val* 100.0)/1024.0;
     //RPM = (perc * maxRPM) / 100.0;
     RPM = perc*m + b;
-    
-    lcd.setCursor(0,0);
-    lcd.print("Pot:"); lcd.print(perc); lcd.print(" %");
-    lcd.setCursor(0,1);
-    lcd.print("RPM:"); lcd.print(RPM);
-    
-    Serial.print("Potenciometro: "); Serial.print(perc); Serial.println(" %");
-    Serial.print("RPM: "); Serial.println(RPM);
+    //Serial.print("Potenciometro: "); Serial.print(perc); Serial.println(" %");
+    //Serial.print("RPM: "); Serial.println(RPM);
     stepper.setRPM(RPM);
-    stepper.rotate((RPM/120.0)*MOTOR_STEPS);
-    /*
-     * Moving motor to original position using steps
-     */
-    //stepper.move(-MOTOR_STEPS*MICROSTEPS);
-
-    // pause and allow the motor to be moved by hand
-    // stepper.disable();
-
-    //delay(5000);
+    stepper.stop();
 }
