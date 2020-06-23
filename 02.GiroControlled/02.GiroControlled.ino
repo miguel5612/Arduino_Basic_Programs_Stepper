@@ -110,14 +110,7 @@ void loop() {
     if(configuration.delayTime > 0 & configuration.steps>0)
     {
        Serial.print("Girando.");
-       int pasos = 0;
-       while(pasos <= configuration.steps)
-       {
-          stepper.move(1); //Paso 1, el motor se mueve
-          getVelocity(); // Chequeo si la velocidad ha cambiado
-          Serial.print(".");
-          pasos++;
-       }
+       stepper.move(configuration.steps);
        Serial.println(); // Salto de linea
        delay(configuration.delayTime); // Paso 2, el motor espera
        digitalWrite(relay, HIGH); // Paso 3, genera una salida
@@ -125,7 +118,6 @@ void loop() {
        delay(500); // Paso 3, espera mientras sube el piston
        digitalWrite(relay, LOW); // Paso 4, apaga la señal de rele y todo vuelve a empezar
     }
-    getVelocity();
 }
 
 void getVelocity()
@@ -138,6 +130,7 @@ void getVelocity()
     //Serial.print("Potenciometro: "); Serial.print(perc); Serial.println(" %");
     //Serial.print("RPM: "); Serial.println(RPM);
     stepper.setRPM(RPM);
+    stepper.stop();
 }
 
 template <class T> int EEPROM_writeAnything(int ee, const T& value)
