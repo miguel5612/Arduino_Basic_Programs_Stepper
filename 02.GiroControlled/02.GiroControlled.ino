@@ -14,8 +14,8 @@
 
 
 // All the wires needed for full functionality
-#define DIR 6
-#define STEP 3
+#define DIR 9
+#define STEP 10
 #define pot A0
 #define relay 12
 #define interruptPin 2
